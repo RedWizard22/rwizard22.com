@@ -1,0 +1,39 @@
+body {
+  background-color: black;
+  background-image: url("./images/space_stars2.jpg");
+  background-size: cover;
+  background-repeat: repeat-y;
+  background-position: center;
+}
+h1 {
+  color: white;
+  /* font-family: Arial, Helvetica, sans-serif; */
+  font-family: 'Aldrich';
+  font-size: 42px;
+}
+p {
+  color: white;
+  font-family: 'Aldrich';
+}
+/* a { */
+/*   color: white; */
+/* } */
+#title {
+	position: relative;
+}
+#pt1 {
+	position: absolute;
+	top: 0px;
+	right: 74px;
+	margin: 18px -18px 0px 0px;
+}
+#pt2 {
+	transform: rotate(90deg);
+	position: absolute;
+	top: 24px;
+	right: 0px;
+	margin: 18px -18px 0px 0px;
+}
+#beans {
+	transform: rotate(25deg) scale(50%);
+}

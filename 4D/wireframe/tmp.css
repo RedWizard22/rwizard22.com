@@ -1,0 +1,37 @@
+body{
+  margin: 0;
+}
+
+canvas{
+  display: block;
+}
+
+.slider{
+  -webkit-appearance: slider-vertical; /* WebKit */
+  position: absolute;
+  height: 80%;
+}
+
+#xy_slider{
+  /* left: 25px; */
+}
+
+#xz_slider{
+  left: 25px;
+}
+
+#yz_slider{
+  left: 50px;
+}
+
+#xw_slider{
+  left: 75px;
+}
+
+#yw_slider{
+  left: 100px;
+}
+
+#zw_slider{
+  left: 125px;
+}
