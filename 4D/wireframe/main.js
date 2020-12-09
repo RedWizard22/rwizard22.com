@@ -36,6 +36,50 @@ import { project23d, Rotor4D } from '../4dfuncs.js'
 var scene, camera, renderer;
 var cube;
 
+class Arrow{
+  constructor(direction, thickness, color){
+    this.thickness = thickness;
+    this.material = new THREE.MeshToonMaterial({ color: color, gradientMap: THREE.fourTone, opacity: 0.6, transparent: true });
+
+    let cylinderGeometry = new THREE.CylinderBufferGeometry(thickness,thickness,1,20);
+    cylinderGeometry.rotateX(math.PI/2);
+    this.cylinderMesh = new THREE.Mesh( cylinderGeometry, this.material );
+    
+    let coneGeometry = new THREE.ConeBufferGeometry( this.thickness*2, 2*this.thickness*1.5, 4, 1 );
+    coneGeometry.rotateX(math.PI/2);
+    this.coneMesh = new THREE.Mesh( coneGeometry, this.material );
+
+    this.singleGeometry = new THREE.BufferGeometry();
+
+    this.setDirection( direction );
+  }
+
+  setDirection(vec){
+
+    let length = math.distance( [0,0,0], vec );
+    
+    if ( length < this.thickness ){
+      this.setVisible(false);
+    } else {
+      this.cylinderMesh.scale.z = length;
+      
+      this.cylinderMesh.position.set(0,0,0);
+      this.coneMesh.position.set(0,0,0);
+      this.cylinderMesh.lookAt( ...vec );
+      this.coneMesh.lookAt( ...vec );
+      
+      this.cylinderMesh.position.set( ...math.divide( vec, 2 ) );
+      this.coneMesh.position.set( ...math.add( vec, math.multiply( this.thickness, math.divide( vec, length ) ) ) );
+      this.setVisible(true);
+    }
+  }
+
+  setVisible(visible){
+    this.coneMesh.visible = visible;
+    this.cylinderMesh.visible = visible;
+  }
+}
+
 var hyperObject = {
   rotation: [0,0,0,0,0,0],
   wCamDist: -3,
@@ -56,6 +100,11 @@ var hyperObject = {
   yUp: [0,1,0,0],
   zUp: [0,0,1,0],
   wUp: [0,0,0,1],
+
+  xArr: new Arrow([1,0,0], 0.05, 0xff0000),
+  yArr: new Arrow([0,1,0], 0.05, 0x00ff00),
+  zArr: new Arrow([0,0,1], 0.05, 0x0000ff),
+  wArr: new Arrow([0,0,0], 0.05, 0xffffff),
 
   proj23d: function(){
     this.points3D = project23d(this.rotPoints4D);
@@ -158,6 +207,7 @@ var hyperObject = {
   }
 };
 
+
 hyperObject.setRotation([0,0,0,0,0,0]);
 hyperObject.proj23d();
 hyperObject.createMeshes();
@@ -237,7 +287,18 @@ function init(){
   pointLight.shadow.mapSize.width = 2048;
   pointLight.shadow.mapSize.height = 2048;
   scene.add(pointLight);
+  
 
+
+  //// Stuff ////
+  scene.add(hyperObject.xArr.coneMesh);
+  scene.add(hyperObject.yArr.coneMesh);
+  scene.add(hyperObject.zArr.coneMesh);
+  scene.add(hyperObject.wArr.coneMesh);
+  scene.add(hyperObject.xArr.cylinderMesh);
+  scene.add(hyperObject.yArr.cylinderMesh);
+  scene.add(hyperObject.zArr.cylinderMesh);
+  scene.add(hyperObject.wArr.cylinderMesh);
 };
 
 var totalrot = [0,0,0,0,0,0]
@@ -295,6 +356,11 @@ var animate = function(){
   hyperObject.setRotation([xyrot,xzrot,yzrot,xwrot,ywrot,zwrot]);
   hyperObject.proj23d();
   hyperObject.updateMeshes();
+
+  hyperObject.xArr.setDirection(hyperObject.xUp.slice(0,3));
+  hyperObject.yArr.setDirection(hyperObject.yUp.slice(0,3));
+  hyperObject.zArr.setDirection(hyperObject.zUp.slice(0,3));
+  hyperObject.wArr.setDirection(hyperObject.wUp.slice(0,3));
 
   // cube.rotation.z = xyrot;
   // cube.rotation.y = xzrot;
