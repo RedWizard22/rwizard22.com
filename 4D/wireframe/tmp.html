@@ -1,23 +1,53 @@
 <html lang="en-GB">
-	<head>
-		<meta charset="utf-8">
-		<title>AnotherCube</title>
-                <link rel="stylesheet" type="text/css" href="./tmp.css">
-	</head>
-	<body>
-		<!-- <script src="../../node_modules/three/build/three.js"></script> -->
-		<!-- <script src="../../node_modules/three/examples/jsm/utils/BufferGeometryUtils.js"></script> -->
-		<!-- <script src="../../node_modules/mathjs/dist/math.js"></script> -->
-		<!-- <script src="../4dfuncs.js"></script> -->
-                <!-- <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script> -->
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/7.5.1/math.min.js" integrity="sha512-6SHRAV8GhJ+3WvGPKQNsBpLj7J9QF9JFwH7nPSRLtH/OqFrlXRd54Z+QDgw7xj1f7dV8c50sKhZYr/xGPlMoiw==" crossorigin="anonymous"></script>
-                <script src="main.js" type="module"></script>
-                
-                <input type="range" min="0" max="360" value="180" step="1" class="slider" id="xy_slider" orient="vertical" >
-                <input type="range" min="0" max="360" value="180" step="1" class="slider" id="xz_slider" orient="vertical" >
-                <input type="range" min="0" max="360" value="180" step="1" class="slider" id="yz_slider" orient="vertical" >
-                <input type="range" min="0" max="360" value="180" step="1" class="slider" id="xw_slider" orient="vertical" >
-                <input type="range" min="0" max="360" value="180" step="1" class="slider" id="yw_slider" orient="vertical" >
-                <input type="range" min="0" max="360" value="180" step="1" class="slider" id="zw_slider" orient="vertical" >
-	</body>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, inital-scale=0.5, maximum-scale=0.5, user-scalable=0">
+    <title>AnotherCube</title>
+    <link rel="stylesheet" type="text/css" href="./tmp.css">
+    <link href='https://fonts.googleapis.com/css?family=Aldrich' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  </head>
+  <body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/7.5.1/math.min.js" integrity="sha512-6SHRAV8GhJ+3WvGPKQNsBpLj7J9QF9JFwH7nPSRLtH/OqFrlXRd54Z+QDgw7xj1f7dV8c50sKhZYr/xGPlMoiw==" crossorigin="anonymous"></script>
+    <script src="main.js" type="module"></script>
+    
+    <div id="scene" >
+      <canvas id="rendercanvas" ></canvas>
+    </div>
+    
+    <div id="controls" >
+      <div id="sliders" >
+        <input type="range" min="0" max="360" value="180" step="1" class="slider" id="xy_slider" >
+        <input type="range" min="0" max="360" value="180" step="1" class="slider" id="xz_slider" >
+        <input type="range" min="0" max="360" value="180" step="1" class="slider" id="yz_slider" >
+        <input type="range" min="0" max="360" value="180" step="1" class="slider" id="xw_slider" >
+        <input type="range" min="0" max="360" value="180" step="1" class="slider" id="yw_slider" >
+        <input type="range" min="0" max="360" value="180" step="1" class="slider" id="zw_slider" >
+      </div>
+      <div id="buttos" >
+        <input type="checkbox" id="xy_checkbox" class="tickbox" >
+        <br>
+        <input type="checkbox" id="xz_checkbox" class="tickbox" >
+        <br>
+        <input type="checkbox" id="yz_checkbox" class="tickbox" >
+        <br>
+        <input type="checkbox" id="xw_checkbox" class="tickbox" >
+        <br>
+        <input type="checkbox" id="yw_checkbox" class="tickbox" >
+        <br>
+        <input type="checkbox" id="zw_checkbox" class="tickbox" >
+      </div>
+    </div>
+    <div id="settingDiv">
+      <input id="settingsToggle" type="checkbox" class="checkbox-hidden" >
+      <label for="settingsToggle" >
+        <p id="cog" class="material-icons" >settings</p>
+      </label>
+      <div id="settings">
+        <input type="checkbox" id="showArrows" >
+        <label for="showArrows" >Show Axis Arrows</label>
+      </div>
+    </div>
+  </body>
 </html>

@@ -5,12 +5,19 @@ import * as THREE from '../../node_modules/three/build/three.module.js';
 import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import { project23d, Rotor4D } from '../4dfuncs.js'
 
+
+////// JQuery stuff //////
+$(document).ready(function(){
+  $('#showArrows').change(toggleArrows);
+}); 
+
 ////// Objects and Global Variables //////
 var scene, camera, renderer;
 
 class Arrow{
   constructor(direction, thickness, color){
     this.thickness = thickness;
+    this.nohidden = false;
     this.material = new THREE.MeshToonMaterial({ color: color, gradientMap: THREE.fourTone, opacity: 0.6, transparent: true });
 
     const cylinderGeometry = new THREE.CylinderBufferGeometry(thickness,thickness,1,20);
@@ -40,7 +47,9 @@ class Arrow{
       
       this.cylinderMesh.position.set( ...math.divide( vec, 2 ) );
       this.coneMesh.position.set( ...math.add( vec, math.multiply( this.thickness, math.divide( vec, length ) ) ) );
-      this.setVisible(true);
+      if (this.nohidden == true){
+        this.setVisible(true);
+      }
     }
   }
 
@@ -180,17 +189,21 @@ hyperObject.updateMeshes();
 
 
 function init(){
+  ////////// AAAAAAAAAAAA //////////
+  const sceneWidth = document.getElementById("rendercanvas").clientWidth;
+  const sceneHeight = document.getElementById("rendercanvas").clientHeight;
+  const canv = document.getElementById("rendercanvas");
 
   ////////// Inital Setup //////////
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-  renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
+  camera = new THREE.PerspectiveCamera( 75, sceneWidth / sceneHeight, 0.1, 1000 );
+  renderer = new THREE.WebGLRenderer({canvas: canv, antialias: true, alpha: true});
 
   scene.background = new THREE.Color( 0x000000 );
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.shadowMap.enabled = true;
-  renderer.setSize( window.innerWidth, window.innerHeight );
-  document.body.appendChild( renderer.domElement );
+  renderer.setSize( sceneWidth, sceneHeight );
+  // document.getElementById("scene").appendChild( renderer.domElement );
   
   const controls = new OrbitControls( camera, renderer.domElement );
   
@@ -228,6 +241,7 @@ function init(){
   scene.add(hyperObject.zArr.cylinderMesh);
   scene.add(hyperObject.wArr.cylinderMesh);
   
+  toggleArrows();
 
   // Lighting
   const ambientLight = new THREE.AmbientLight( 0xc4c4c4, 0.6);
@@ -285,12 +299,12 @@ function animate(){
   //   clock.start();
   // }
   
-  let xyrot = (document.getElementById("xy_slider").value) * (math.PI / 180)
-  let xzrot = (document.getElementById("xz_slider").value) * (math.PI / 180)
-  let yzrot = (document.getElementById("yz_slider").value) * (math.PI / 180)
-  let xwrot = (document.getElementById("xw_slider").value) * (math.PI / 180)
-  let ywrot = (document.getElementById("yw_slider").value) * (math.PI / 180)
-  let zwrot = (document.getElementById("zw_slider").value) * (math.PI / 180)
+  let xyrot = $('#xy_slider').val() * (math.PI / 180)
+  let xzrot = $('#xz_slider').val() * (math.PI / 180)
+  let yzrot = $('#yz_slider').val() * (math.PI / 180)
+  let xwrot = $('#xw_slider').val() * (math.PI / 180)
+  let ywrot = $('#yw_slider').val() * (math.PI / 180)
+  let zwrot = $('#zw_slider').val() * (math.PI / 180)
   
   // totalrot = math.add(totalrot, math.multiply(animrot, dTime));
   // hyperObject.setRotation(totalrot);
@@ -310,14 +324,39 @@ function animate(){
 // Resize canvas on window resize
 window.addEventListener( 'resize', onWindowResize, false );
 function onWindowResize(){
+  let sceneWidth = $('#scene').width();
+  let sceneHeight = $('#scene').height();
 
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
+  if (sceneWidth/sceneHeight < 1){
+    sceneHeight = sceneHeight - 420;
+    console.log("reee");
+  }
+  
+  $('#rendercanvas').width(sceneWidth);
+  $('#rendercanvas').height(sceneHeight);
 
-    renderer.setSize( window.innerWidth, window.innerHeight );
+  camera.aspect = sceneWidth / sceneHeight;
+  camera.updateProjectionMatrix();
+  
+  renderer.setSize( sceneWidth, sceneHeight );
 
 }
 
+function toggleArrows(){
+  let visible = document.getElementById("showArrows").checked;
+  // let visible = $('showArrows').is(':checked');
+
+  // console.log(visible);
+
+  hyperObject.xArr.nohidden = visible;
+  hyperObject.yArr.nohidden = visible;
+  hyperObject.zArr.nohidden = visible;
+  hyperObject.wArr.nohidden = visible;
+  hyperObject.xArr.setVisible(visible);
+  hyperObject.yArr.setVisible(visible);
+  hyperObject.zArr.setVisible(visible);
+  hyperObject.wArr.setVisible(visible);
+}
 
 init();
 animate();
