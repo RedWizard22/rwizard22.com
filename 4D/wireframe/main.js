@@ -9,10 +9,12 @@ import { project23d, Rotor4D } from '../4dfuncs.js'
 ////// JQuery stuff //////
 $(document).ready(function(){
   $('#showArrows').change(toggleArrows);
+  $('#resetButto').click(resetSliders);
 }); 
 
 ////// Objects and Global Variables //////
 var scene, camera, renderer;
+const planes = ["xy","xz","yz","xw","yw","zw"];
 
 class Arrow{
   constructor(direction, thickness, color){
@@ -258,46 +260,24 @@ function init(){
 
 }
 
-// var totalrot = [0,0,0,0,0,0]
 
-// xy, xz, yz, xw, yw, zw
-// var animrot = [0,0.8,0,0,0.8,0];
 
 const clock = new THREE.Clock();
+var reeee = 0.0;
+var interval = 0.012;
 
 function animate(){
 
   requestAnimationFrame( animate );
-
-  // let dTime = clock.getDelta();
   
-  // if (clock.elapsedTime < (math.PI/0.8)){
-  //   animrot = [0,0.8,0,0,0.8,0];
-  // }
-  // else if (clock.elapsedTime < 2*(math.PI/0.8)){
-  //   animrot = [0.8,0,0,0,0,0.8];
-  // }
-  // else if (clock.elapsedTime < 3*(math.PI/0.8)){
-  //   animrot = [0,0,0.8,0.8,0,0];
-  // }
-  // else if (clock.elapsedTime < 4*(math.PI/0.8)){
-  //   animrot = [0,0,0,0.8,0,0.8]; 
-  // }
-  // else if (clock.elapsedTime < 5*(math.PI/0.8)){
-  //   animrot = [0,0,0,0,0.8,0.8];
-  // }
-  // else if (clock.elapsedTime < 6*(math.PI/0.8)){
-  //   animrot = [0,0,0,0.8,0.8,0];
-  // }
-  // else if (clock.elapsedTime < 7*(math.PI/0.8)){
-  //   animrot = [0,0,0,0.8,0.8,0.8];
-  // }
-  // else if (clock.elapsedTime < 8*(math.PI/0.8)){
-  //   animrot = [0,0,0,0,0,0];
-  // }
-  // else {
-  //   clock.start();
-  // }
+  reeee += clock.getDelta();
+  if (reeee > 5){
+    reeee = 5;
+  }
+  while (reeee > interval){
+    sliderTest();
+    reeee -= interval;
+  }
   
   let xyrot = $('#xy_slider').val() * (math.PI / 180)
   let xzrot = $('#xz_slider').val() * (math.PI / 180)
@@ -306,9 +286,6 @@ function animate(){
   let ywrot = $('#yw_slider').val() * (math.PI / 180)
   let zwrot = $('#zw_slider').val() * (math.PI / 180)
   
-  // totalrot = math.add(totalrot, math.multiply(animrot, dTime));
-  // hyperObject.setRotation(totalrot);
-  // console.log(totalrot);
   hyperObject.setRotation([xyrot,xzrot,yzrot,xwrot,ywrot,zwrot]);
   hyperObject.proj23d();
   hyperObject.updateMeshes();
@@ -319,6 +296,26 @@ function animate(){
   hyperObject.wArr.setDirection(hyperObject.wUp.slice(0,3));
 
   renderer.render( scene, camera );
+}
+
+function sliderTest(){
+  for (let plane of planes){
+    let sleeder = $('#' + plane + '_slider');
+    if (document.getElementById(plane + "_checkbox").checked) {
+      if (sleeder.val() == 360){
+        sleeder.val(0)
+      } else {
+        sleeder.val(Number(sleeder.val()) + 1);
+      }
+    }
+  }
+}
+
+function resetSliders(){
+  for (let plane of planes){
+    let sleeder = $('#' + plane + '_slider');
+    sleeder.val(180);
+  }
 }
 
 // Resize canvas on window resize
