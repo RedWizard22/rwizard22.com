@@ -8,7 +8,6 @@ import { project23d, Rotor4D } from '../4dfuncs.js';
 
 ////// JQuery stuff //////
 $(document).ready(function(){
-  $('#showArrows').change(toggleArrows);
   $('#resetButto').click(resetSliders);
   $('#cellSel').change(changeCell);
 }); 
@@ -17,51 +16,6 @@ $(document).ready(function(){
 ////// Objects and Global Variables //////
 var scene, camera, renderer;
 const planes = ["xy","xz","yz","xw","yw","zw"];
-
-class Arrow{
-  constructor(direction, thickness, color){
-    this.thickness = thickness;
-    this.nohidden = false;
-    this.material = new THREE.MeshToonMaterial({ color: color, gradientMap: THREE.fourTone, opacity: 0.6, transparent: true });
-
-    const cylinderGeometry = new THREE.CylinderBufferGeometry(thickness,thickness,1,20);
-    cylinderGeometry.rotateX(math.PI/2);
-    this.cylinderMesh = new THREE.Mesh( cylinderGeometry, this.material );
-    
-    const coneGeometry = new THREE.ConeBufferGeometry( this.thickness*2, 2*this.thickness*1.5, 4, 1 );
-    coneGeometry.rotateX(math.PI/2);
-    this.coneMesh = new THREE.Mesh( coneGeometry, this.material );
-
-    this.setDirection( direction );
-  }
-
-  setDirection(vec){
-
-    let length = math.distance( [0,0,0], vec );
-    
-    if ( length < this.thickness ){
-      this.setVisible(false);
-    } else {
-      this.cylinderMesh.scale.z = length;
-      
-      this.cylinderMesh.position.set(0,0,0);
-      this.coneMesh.position.set(0,0,0);
-      this.cylinderMesh.lookAt( ...vec );
-      this.coneMesh.lookAt( ...vec );
-      
-      this.cylinderMesh.position.set( ...math.divide( vec, 2 ) );
-      this.coneMesh.position.set( ...math.add( vec, math.multiply( this.thickness, math.divide( vec, length ) ) ) );
-      if (this.nohidden == true){
-        this.setVisible(true);
-      }
-    }
-  }
-
-  setVisible(visible){
-    this.coneMesh.visible = visible;
-    this.cylinderMesh.visible = visible;
-  }
-}
 
 var hyperObject = {
   rotation: [0,0,0,0,0,0],
@@ -73,11 +27,6 @@ var hyperObject = {
   yUp: [0,1,0,0],
   zUp: [0,0,1,0],
   wUp: [0,0,0,1],
-
-  xArr: new Arrow([1,0,0], 0.05, 0xff0000),
-  yArr: new Arrow([0,1,0], 0.05, 0x00ff00),
-  zArr: new Arrow([0,0,1], 0.05, 0x0000ff),
-  wArr: new Arrow([0,0,0], 0.05, 0xffffff),
 
   loadData: function(cellName){
     let url = "./" + cellName + ".json";
@@ -102,7 +51,6 @@ var hyperObject = {
     this.connections = json.connections;
     this.thickness = json.optimalThickness;
     this.camWDist = json.optimalCamW;
-    console.log(this.thickness);
     
     if ('meshes' in this) {
       for (let mesh of this.meshes){
@@ -270,17 +218,6 @@ function init(){
     scene.add(mesh);
   }
 
-  scene.add(hyperObject.xArr.coneMesh);
-  scene.add(hyperObject.yArr.coneMesh);
-  scene.add(hyperObject.zArr.coneMesh);
-  scene.add(hyperObject.wArr.coneMesh);
-  scene.add(hyperObject.xArr.cylinderMesh);
-  scene.add(hyperObject.yArr.cylinderMesh);
-  scene.add(hyperObject.zArr.cylinderMesh);
-  scene.add(hyperObject.wArr.cylinderMesh);
-  
-  toggleArrows();
-
   // Lighting
   const ambientLight = new THREE.AmbientLight( 0xc4c4c4, 0.6);
   scene.add(ambientLight);
@@ -325,11 +262,6 @@ function animate(){
   hyperObject.setRotation([xyrot,xzrot,yzrot,xwrot,ywrot,zwrot]);
   hyperObject.proj23d();
   hyperObject.updateMeshes();
-
-  hyperObject.xArr.setDirection(hyperObject.xUp.slice(0,3));
-  hyperObject.yArr.setDirection(hyperObject.yUp.slice(0,3));
-  hyperObject.zArr.setDirection(hyperObject.zUp.slice(0,3));
-  hyperObject.wArr.setDirection(hyperObject.wUp.slice(0,3));
 
   renderer.render( scene, camera );
 }
@@ -379,21 +311,6 @@ function changeCell(){
   hyperObject.loadData(cellType);
 }
 
-function toggleArrows(){
-  let visible = document.getElementById("showArrows").checked;
-  // let visible = $('showArrows').is(':checked');
-
-  // console.log(visible);
-
-  hyperObject.xArr.nohidden = visible;
-  hyperObject.yArr.nohidden = visible;
-  hyperObject.zArr.nohidden = visible;
-  hyperObject.wArr.nohidden = visible;
-  hyperObject.xArr.setVisible(visible);
-  hyperObject.yArr.setVisible(visible);
-  hyperObject.zArr.setVisible(visible);
-  hyperObject.wArr.setVisible(visible);
-}
 
 init();
 animate();
