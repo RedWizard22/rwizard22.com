@@ -3,14 +3,16 @@
 ////// Imports //////
 import * as THREE from '../../node_modules/three/build/three.module.js';
 import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls.js';
-import { project23d, Rotor4D } from '../4dfuncs.js'
+import { project23d, Rotor4D } from '../4dfuncs.js';
 
 
 ////// JQuery stuff //////
 $(document).ready(function(){
   $('#showArrows').change(toggleArrows);
   $('#resetButto').click(resetSliders);
+  $('#cellSel').change(changeCell);
 }); 
+
 
 ////// Objects and Global Variables //////
 var scene, camera, renderer;
@@ -63,13 +65,8 @@ class Arrow{
 
 var hyperObject = {
   rotation: [0,0,0,0,0,0],
-  points4D:    [[1,-1,-1,1,1,-1,-1,1,1,-1,-1,1,1,-1,-1,1],
-	  	[1,1,-1,-1,1,1,-1,-1,1,1,-1,-1,1,1,-1,-1],
-		[1,1,1,1,-1,-1,-1,-1,1,1,1,1,-1,-1,-1,-1],
-		[1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1,-1,-1,-1]],
-  connections: [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7],[8,9],[9,10],[10,11],[11,8],[12,13],[13,14],[14,15],[15,12],[8,12],[9,13],[10,14],[11,15],[0,8],[1,9],[2,10],[3,11],[4,12],[5,13],[6,14],[7,15]],
-  // material: new THREE.MeshPhongMaterial( { color: 0x2194ce, shininess: 100 } ),
-  material: new THREE.MeshToonMaterial( { color: 0x2194ce, gradientMap: THREE.threeTone } ),
+  material: new THREE.MeshPhongMaterial( { color: 0x2194ce, shininess: 100 } ),
+  // material: new THREE.MeshToonMaterial( { color: 0x2194ce, gradientMap: THREE.threeTone } ),
   thickness: 0.05,
   
   xUp: [1,0,0,0],
@@ -82,8 +79,47 @@ var hyperObject = {
   zArr: new Arrow([0,0,1], 0.05, 0x0000ff),
   wArr: new Arrow([0,0,0], 0.05, 0xffffff),
 
+  loadData: function(cellName){
+    let url = "./" + cellName + ".json";
+
+    // console.log("loading " + url);
+
+    let json = (function () {
+      var json = null;
+      $.ajax({
+        'async': false,
+        'global': false,
+        'url': url,
+        'dataType': "json",
+        'success': function (data) {
+          json = data;
+        }
+      });
+      return json;
+    })();
+    
+    this.points4D = json.points;
+    this.connections = json.connections;
+    this.thickness = json.optimalThickness;
+    this.camWDist = json.optimalCamW;
+    console.log(this.thickness);
+    
+    if ('meshes' in this) {
+      for (let mesh of this.meshes){
+        scene.remove(mesh);
+      }
+      this.createMeshes();
+      for (let mesh of this.meshes){
+        mesh.castShadow = true;
+        scene.add(mesh);
+      }
+    } else {
+      this.createMeshes();
+    }
+  },
+
   proj23d: function(){
-    this.points3D = project23d(this.rotPoints4D);
+    this.points3D = project23d(this.rotPoints4D, this.camWDist);
   },
   createMeshes: function(){
     const conectionGeometry = new THREE.CylinderBufferGeometry(this.thickness,this.thickness,1,20);
@@ -96,7 +132,7 @@ var hyperObject = {
       this.meshes.push( mesh );
     }
 
-    for ( var x in this.points3D[0] ){
+    for ( var x in this.points4D[0] ){
       let mesh = new THREE.Mesh( pointGeometry, this.material );
       this.meshes.push( mesh );
     }
@@ -184,9 +220,9 @@ var hyperObject = {
 };
 
 
+hyperObject.loadData("cell8");
 hyperObject.setRotation([0,0,0,0,0,0]);
 hyperObject.proj23d();
-hyperObject.createMeshes();
 hyperObject.updateMeshes();
 
 
@@ -264,7 +300,7 @@ function init(){
 
 const clock = new THREE.Clock();
 var reeee = 0.0;
-var interval = 0.012;
+var interval = 0.02;
 
 function animate(){
 
@@ -326,7 +362,6 @@ function onWindowResize(){
 
   if (sceneWidth/sceneHeight < 1){
     sceneHeight = sceneHeight - 420;
-    console.log("reee");
   }
   
   $('#rendercanvas').width(sceneWidth);
@@ -337,6 +372,11 @@ function onWindowResize(){
   
   renderer.setSize( sceneWidth, sceneHeight );
 
+}
+
+function changeCell(){
+  let cellType = $('#cellSel').val();
+  hyperObject.loadData(cellType);
 }
 
 function toggleArrows(){
