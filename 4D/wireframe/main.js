@@ -5,7 +5,6 @@ import * as THREE from '../../node_modules/three/build/three.module.js';
 import { OrbitControls } from '../../node_modules/three/examples/jsm/controls/OrbitControls.js';
 import { project23d, Rotor4D } from '../4dfuncs.js';
 
-
 ////// JQuery stuff //////
 $(document).ready(function(){
   $('#resetButto').click(resetSliders);
@@ -14,15 +13,28 @@ $(document).ready(function(){
 }); 
 
 
+////// Generic Functions //////
+function arrayEquals(a, b) {
+  return Array.isArray(a) &&
+    Array.isArray(b) &&
+    a.length === b.length &&
+    a.every((val, index) => val === b[index]);
+}
+
+
 ////// Objects and Global Variables //////
 var scene, camera, renderer;
 const planes = ["xy","xz","yz","xw","yw","zw"];
+const clock = new THREE.Clock();
+var sliderDTime = 0.0;
+const interval = 0.02;
 
 var hyperObject = {
   rotation: [0,0,0,0,0,0],
   material: new THREE.MeshPhongMaterial( { color: 0x2194ce, shininess: 100 } ),
   // material: new THREE.MeshToonMaterial( { color: 0x2194ce, gradientMap: THREE.threeTone } ),
   thickness: 0.05,
+  camWDist: -3,
   
   xUp: [1,0,0,0],
   yUp: [0,1,0,0],
@@ -133,6 +145,7 @@ var hyperObject = {
     }
 
   },
+
   setRotation: function(rotation) {
     this.rotation = rotation;
     
@@ -264,7 +277,6 @@ function init(){
   // document.getElementById("scene").appendChild( renderer.domElement );
   
   const controls = new OrbitControls( camera, renderer.domElement );
-  
 
   ////////// Scene Setup //////////
   // Camera
@@ -295,27 +307,24 @@ function init(){
   directionalLight.castShadow = true;
   directionalLight.shadow.mapSize.width = 2048;
   directionalLight.shadow.mapSize.height = 2048;
+  directionalLight.position.y = 10;
   scene.add( directionalLight );
 
+  // const helper = new THREE.DirectionalLightHelper( directionalLight, 5 );
+  // scene.add( helper );
+
+  clock.start();
 }
-
-
-
-const clock = new THREE.Clock();
-var reeee = 0.0;
-var interval = 0.02;
 
 function animate(){
 
-  requestAnimationFrame( animate );
-  
-  reeee += clock.getDelta();
-  if (reeee > 5){
-    reeee = 5;
+  sliderDTime += clock.getDelta();
+  if (sliderDTime > 5){
+    sliderDTime = 5;
   }
-  while (reeee > interval){
+  while (sliderDTime > interval){
     sliderTest();
-    reeee -= interval;
+    sliderDTime -= interval;
   }
   
   let xyrot = $('#xy_slider').val() * (math.PI / 180)
@@ -325,11 +334,16 @@ function animate(){
   let ywrot = $('#yw_slider').val() * (math.PI / 180)
   let zwrot = $('#zw_slider').val() * (math.PI / 180)
   
-  hyperObject.setRotation([xyrot,xzrot,yzrot,xwrot,ywrot,zwrot]);
-  hyperObject.proj23d();
-  hyperObject.updateMeshes();
+  // Update hyperObject if rotation has changed
+  if ( !arrayEquals(hyperObject.rotation, [xyrot,xzrot,yzrot,xwrot,ywrot,zwrot]) ){
+    hyperObject.setRotation([xyrot,xzrot,yzrot,xwrot,ywrot,zwrot]);
+    hyperObject.proj23d();
+    hyperObject.updateMeshes();
+  }
 
   renderer.render( scene, camera );
+
+  requestAnimationFrame( animate );
 }
 
 function sliderTest(){

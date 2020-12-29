@@ -3,7 +3,7 @@
 function project23d(points4d, camDist = -3){
   /** Perspecive project a set of 4D points to 3D */
   let points3d = [Array.from(points4d[0]),Array.from(points4d[1]),Array.from(points4d[2])];
-  for ( var x in points3d[0] ){
+  for ( let x in points3d[0] ){
     let multiplier = 2/(points4d[3][x] - camDist)
     points3d[0][x] *= multiplier;
     points3d[1][x] *= multiplier;
