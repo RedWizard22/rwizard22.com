@@ -1,4 +1,4 @@
-"use strict"
+"use strict";
 
 ////// Imports //////
 import * as THREE from '../../node_modules/three/build/three.module.js';
@@ -10,6 +10,7 @@ import { project23d, Rotor4D } from '../4dfuncs.js';
 $(document).ready(function(){
   $('#resetButto').click(resetSliders);
   $('#cellSel').change(changeCell);
+  $('#faceToggle').click(function(){hyperObject.createMeshes();});
 }); 
 
 
@@ -31,8 +32,6 @@ var hyperObject = {
   loadData: function(cellName){
     let url = "./" + cellName + ".json";
 
-    // console.log("loading " + url);
-
     let json = (function () {
       var json = null;
       $.ajax({
@@ -49,27 +48,31 @@ var hyperObject = {
     
     this.points4D = json.points;
     this.connections = json.connections;
+    this.faces = json.faces;
     this.thickness = json.optimalThickness;
     this.camWDist = json.optimalCamW;
     
-    if ('meshes' in this) {
-      for (let mesh of this.meshes){
-        scene.remove(mesh);
-      }
-      this.createMeshes();
-      for (let mesh of this.meshes){
-        mesh.castShadow = true;
-        scene.add(mesh);
-      }
-    } else {
-      this.createMeshes();
-    }
+    this.createMeshes();
+
   },
 
   proj23d: function(){
     this.points3D = project23d(this.rotPoints4D, this.camWDist);
   },
+
   createMeshes: function(){
+      if ('meshes' in this) {
+        for (let mesh of this.meshes){
+          scene.remove(mesh);
+        }
+        for (let mesh of this.faceMeshes){
+          scene.remove(mesh);
+        }
+      }
+
+    this.setRotation([0,0,0,0,0,0]);
+    this.proj23d();
+
     const conectionGeometry = new THREE.CylinderBufferGeometry(this.thickness,this.thickness,1,20);
     conectionGeometry.rotateX(math.PI/2);
     const pointGeometry = new THREE.SphereBufferGeometry(this.thickness,20,20);
@@ -80,10 +83,55 @@ var hyperObject = {
       this.meshes.push( mesh );
     }
 
-    for ( var x in this.points4D[0] ){
+    for ( let x in this.points4D[0] ){
       let mesh = new THREE.Mesh( pointGeometry, this.material );
       this.meshes.push( mesh );
     }
+    
+    this.faceMeshes = []
+    if (document.getElementById("faceToggle").checked){
+      for ( let face of this.faces ){
+        const shape = new THREE.Shape();
+        switch (face.length){
+          case 3:
+            shape.moveTo( -1, -1 );
+            shape.lineTo( -1, 1 );
+            shape.lineTo( 1, -1 );
+            shape.lineTo( -1, -1 );
+            break
+          case 4:
+            shape.moveTo( -1, -1 );
+            shape.lineTo( -1, 1 );
+            shape.lineTo( 1, 1 );
+            shape.lineTo( 1, -1 );
+            shape.lineTo( -1, -1 );
+            break
+          case 5:
+            shape.moveTo( -1, -1 );
+            shape.lineTo( -1, 1 );
+            shape.lineTo( 1, 1 );
+            shape.lineTo( 1.5, 1 );
+            shape.lineTo( 1, -1 );
+            shape.lineTo( -1, -1 );
+            break
+        } 
+
+        // Create gemotry and mesh
+        const geometry = new THREE.ShapeBufferGeometry( shape );
+        const material = new THREE.MeshPhysicalMaterial( { color: 0x2194ce, side: THREE.DoubleSide, opacity: 0.3, transparent: true, clearcoat: 1.0, reflectivity: 1.0, roughness: 0.0, flatShading: true, premultipliedAlpha: true, precision: "highp", depthWrite: false } );
+        const mesh = new THREE.Mesh( geometry, material ) ;
+        this.faceMeshes.push( mesh );
+      }
+    }
+
+    for (let mesh of this.meshes){
+      mesh.castShadow = true;
+      scene.add(mesh);
+    }
+    for (let mesh of this.faceMeshes){
+      scene.add(mesh);
+    }
+
   },
   setRotation: function(rotation) {
     this.rotation = rotation;
@@ -164,14 +212,38 @@ var hyperObject = {
       let j = Number(i) + concount;
       this.meshes[j].position.set(this.points3D[0][i], this.points3D[1][i], this.points3D[2][i]);
     }
+
+    for ( i in this.faceMeshes ){
+      let mesh = this.faceMeshes[i];
+      let face = this.faces[i];
+      
+      let xBar = 0;
+      let yBar = 0;
+      let zBar = 0;
+      for (let point of face){
+        xBar += this.points3D[0][point];
+        yBar += this.points3D[1][point];
+        zBar += this.points3D[2][point];
+      }
+      xBar /= face.length;
+      yBar /= face.length;
+      zBar /= face.length;
+      
+      let j = 0;
+      for (let point of face){
+        mesh.geometry.attributes.position.array[j] = this.points3D[0][point] - xBar;
+        mesh.geometry.attributes.position.array[j+1] = this.points3D[1][point] - yBar;
+        mesh.geometry.attributes.position.array[j+2] = this.points3D[2][point] - zBar;
+
+        j += 3;
+      }
+      
+      mesh.geometry.attributes.position.needsUpdate = true;
+      
+      mesh.position.set(xBar, yBar, zBar);
+    }
   }
 };
-
-
-hyperObject.loadData("cell8");
-hyperObject.setRotation([0,0,0,0,0,0]);
-hyperObject.proj23d();
-hyperObject.updateMeshes();
 
 
 function init(){
@@ -183,9 +255,9 @@ function init(){
   ////////// Inital Setup //////////
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera( 75, sceneWidth / sceneHeight, 0.1, 1000 );
-  renderer = new THREE.WebGLRenderer({canvas: canv, antialias: true, alpha: true});
+  renderer = new THREE.WebGLRenderer({canvas: canv, antialias: true, alpha: true, sortObjects: false});
 
-  scene.background = new THREE.Color( 0x000000 );
+  scene.background = new THREE.Color( 0xffdf06 );
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.shadowMap.enabled = true;
   renderer.setSize( sceneWidth, sceneHeight );
@@ -193,7 +265,6 @@ function init(){
   
   const controls = new OrbitControls( camera, renderer.domElement );
   
-  scene.background = new THREE.Color( 0xffdf06 );
 
   ////////// Scene Setup //////////
   // Camera
@@ -213,23 +284,18 @@ function init(){
 
   scene.add(floor);
 
-  for (var mesh of hyperObject.meshes){
-    mesh.castShadow = true;
-    scene.add(mesh);
-  }
+  hyperObject.loadData("cell8");
+  hyperObject.updateMeshes();
 
   // Lighting
-  const ambientLight = new THREE.AmbientLight( 0xc4c4c4, 0.6);
+  const ambientLight = new THREE.AmbientLight( 0xc4c4c4, 0.7);
   scene.add(ambientLight);
 
-  const pointLight = new THREE.PointLight( 0xffffff, 1, 19 );
-  pointLight.position.set(-3,10,-3);
-  pointLight.castShadow = true;
-  pointLight.shadow.camera.near = 0.1;
-  pointLight.shadow.camera.far = 25;
-  pointLight.shadow.mapSize.width = 2048;
-  pointLight.shadow.mapSize.height = 2048;
-  scene.add(pointLight);
+  const directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+  directionalLight.castShadow = true;
+  directionalLight.shadow.mapSize.width = 2048;
+  directionalLight.shadow.mapSize.height = 2048;
+  scene.add( directionalLight );
 
 }
 
